@@ -1,0 +1,19 @@
+[project]
+name = "doce-asa"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "wellington-cpu", email = "weleington@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "zensical>=0.0.63",
+]
+
+[project.scripts]
+doce-asa = "doce_asa:main"
+
+[build-system]
+requires = ["uv_build>=0.12.17,<0.13.0"]
+build-backend = "uv_build"
