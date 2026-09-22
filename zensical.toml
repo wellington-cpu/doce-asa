@@ -6,7 +6,7 @@ site_name = "Documentation"
 
 # copyright = "Copyright &copy; 2026 Your name"
 
-# repo_url = "https://github.com/wellington-cpu/doce-asa"
+repo_url = "https://github.com/wellington-cpu/doce-asa"
 # repo_name = "wellington-cpu/doce-asa"
 # edit_uri = "edit/main/docs/"
 
