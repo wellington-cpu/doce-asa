@@ -2,12 +2,12 @@
 site_url = "https://www.example.com/"
 site_name = "Documentation"
 # site_description = "Your project description"
-# site_author = "Your name"
+# site_author = "wellington Alves"
 
 # copyright = "Copyright &copy; 2026 Your name"
 
-# repo_url = "https://github.com/user/repo"
-# repo_name = "user/repo"
+# repo_url = "https://github.com/wellington-cpu/doce-asa"
+# repo_name = "wellington-cpu/doce-asa"
 # edit_uri = "edit/main/docs/"
 
 nav = [
