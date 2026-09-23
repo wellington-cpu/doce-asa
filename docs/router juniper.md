@@ -148,7 +148,7 @@ commit
 
 | Atribuição | IFRN / Diego Pereira  |
 | :--- | :--- |
-| **IFRN** | Centro de Estudo e Tecnologia [Campus Parnamirim] |
+| **IFRN** | Curso Técnico em Redes de Computadores [Campus Parnamirim] |
 | **Orientador** | Prof. [Diego Pereira ] |
 | **Contexto** | Laboratório de Redes e Conectividade |
 
