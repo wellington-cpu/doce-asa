@@ -148,12 +148,12 @@ commit
 
 | Atribuição | IFRN / Diego Pereira  |
 | :--- | :--- |
-| **IFRN** | Curso Técnico em Redes de Computadores [Campus Parnamirim] |
-| **Orientador** | Prof. [Diego Pereira ] |
+| **IFRN** | Curso Técnico em Redes de Computadores - IFRN PARNAMIRIM |
+| **Orientador** | Prof. Diego Pereira  |
 | **Contexto** | Laboratório de Redes e Conectividade |
 
 > ### 📝 Referências e Agradecimentos
-> Este guia de configuração foi desenvolvido como material de apoio técnico sob a orientação do **Professor [Diego Pereira]** no **Centro de Estudo e Tecnologia [IFRN PARNAMIRIM]**. Os dados e comandos foram baseados na [Documentação Oficial de Configuração do Junos OS](https://juniper.net).
+> Este guia de configuração foi desenvolvido como material de apoio técnico sob a orientação do **Professor [Diego Pereira]** no **Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte (IFRN)**. Os dados e comandos foram baseados na [Documentação Oficial de Configuração do Junos OS](https://juniper.net).
 
 
 *Fim do documento técnico de referência.*
