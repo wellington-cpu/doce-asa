@@ -1,4 +1,4 @@
-# Guia de Configuração Inicial e de Segurança: Juniper J2320
+# Guia de Configuração Juniper J2320
 
 Este documento apresenta o passo a passo para a configuração inicial, serviços de rede (DHCP), zonas de segurança (Firewall) e tradução de endereços (NAT) no roteador **Juniper J2320** utilizando o **Junos OS**.
 
