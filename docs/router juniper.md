@@ -152,4 +152,8 @@ commit
 | **Orientador** | Prof. [Diego Pereira ] |
 | **Contexto** | Laboratório de Redes e Conectividade |
 
+> ### 📝 Referências e Agradecimentos
+> Este guia de configuração foi desenvolvido como material de apoio técnico sob a orientação do **Professor [Diego Pereira]** no **Centro de Estudo e Tecnologia [IFRN PARNAMIRIM]**. Os dados e comandos foram baseados na [Documentação Oficial de Configuração do Junos OS](https://juniper.net).
+
+
 *Fim do documento técnico de referência.*
