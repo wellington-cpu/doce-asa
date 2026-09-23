@@ -144,7 +144,7 @@ commit
 ```
 
 ---
-### 📋 Ficha Técnica do Documento
+###  Ficha Técnica do Documento
 
 | Atribuição | IFRN / Diego Pereira  |
 | :--- | :--- |
@@ -152,7 +152,7 @@ commit
 | **Orientador** | Prof. Diego Pereira  |
 | **Contexto** | Laboratório de Redes e Conectividade |
 
-> ### 📝 Referências e Agradecimentos
+> ###  Referências e Agradecimentos
 > Este guia de configuração foi desenvolvido como material de apoio técnico sob a orientação do **Professor [Diego Pereira]** no **Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte (IFRN)**. Os dados e comandos foram baseados na [Documentação Oficial de Configuração do Junos OS](https://juniper.net).
 
 
