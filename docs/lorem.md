@@ -1,3 +1,0 @@
-# Lorem
-
-##Tudo em Markdown
