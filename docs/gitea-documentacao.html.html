@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentação — Gitea + AD no Alpine Linux</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-alt: #f6f8fa;
+    --text: #24292f;
+    --text-muted: #57606a;
+    --border: #d0d7de;
+    --accent: #0969da;
+    --accent-hover: #0550ae;
+    --code-bg: #f6f8fa;
+    --code-text: #24292f;
+    --header-bg: #0969da;
+    --header-text: #ffffff;
+    --sidebar-bg: #f6f8fa;
+    --table-header-bg: #0969da;
+    --success: #1a7f37;
+    --success-bg: #dafbe1;
+    --warning: #9a6700;
+    --warning-bg: #fff8c5;
+    --danger: #cf222e;
+    --danger-bg: #ffebe9;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  [data-theme="dark"] {
+    --bg: #0d1117;
+    --bg-alt: #161b22;
+    --text: #c9d1d9;
+    --text-muted: #8b949e;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent-hover: #79c0ff;
+    --code-bg: #161b22;
+    --code-text: #c9d1d9;
+    --header-bg: #161b22;
+    --header-text: #f0f6fc;
+    --sidebar-bg: #161b22;
+    --table-header-bg: #21262d;
+    --success-bg: #0f2417;
+    --warning-bg: #2e2a12;
+    --danger-bg: #2e1216;
+    --shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--bg);
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ---------- HEADER ---------- */
+  header {
+    background: var(--header-bg);
+    color: var(--header-text);
+    padding: 20px 30px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 1.25em;
+    font-weight: 600;
+  }
+
+  header .subtitle {
+    font-size: 0.85em;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-toggle {
+    background: rgba(255,255,255,0.15);
+    color: var(--header-text);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background 0.2s;
+  }
+
+  .btn-toggle:hover {
+    background: rgba(255,255,255,0.25);
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-badge svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* ---------- LAYOUT ---------- */
+  .wrapper {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 30px;
+    padding: 30px;
+    transition: grid-template-columns 0.3s ease;
+  }
+
+  .wrapper.sidebar-hidden {
+    grid-template-columns: 0px 1fr;
+    gap: 0;
+  }
+
+  .wrapper.sidebar-hidden .sidebar {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-20px);
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar {
+    position: sticky;
+    top: 100px;
+    align-self: start;
+    max-height: calc(100vh - 130px);
+    overflow-y: auto;
+    background: var(--sidebar-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  .sidebar h3 {
+    margin-top: 0;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .sidebar nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .sidebar nav ul li { margin: 4px 0; }
+
+  .sidebar nav a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9em;
+    display: block;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .sidebar nav a:hover {
+    background: var(--bg);
+    border-left-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .sidebar nav a.active {
+    background: var(--bg);
+    border-left-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .sidebar nav a.sub {
+    padding-left: 24px;
+    font-size: 0.85em;
+    color: var(--text-muted);
+  }
+
+  /* ---------- BOTÃO OCULTAR MENU ---------- */
+  .btn-hide-sidebar {
+    position: fixed;
+    top: 100px;
+    left: 305px;
+    z-index: 90;
+    background: var(--accent);
+    color: white;
+    border: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.8em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    transition: left 0.3s ease, background 0.2s, transform 0.2s;
+  }
+
+  .btn-hide-sidebar:hover {
+    background: var(--accent-hover);
+    transform: scale(1.1);
+  }
+
+  .btn-hide-sidebar.collapsed {
+    left: 10px;
+  }
+
+  /* ---------- MAIN ---------- */
+  main { min-width: 0; }
+
+  main section {
+    margin-bottom: 50px;
+    scroll-margin-top: 100px;
+  }
+
+  h2 {
+    font-size: 1.7em;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 10px;
+    margin-top: 40px;
+    color: var(--text);
+  }
+
+  h3 {
+    font-size: 1.25em;
+    margin-top: 30px;
+    color: var(--text);
+  }
+
+  h4 {
+    font-size: 1.05em;
+    margin-top: 20px;
+    color: var(--text-muted);
+  }
+
+  p { margin: 12px 0; }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+  }
+
+  /* ---------- CODE ---------- */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    position: relative;
+    font-size: 0.88em;
+    line-height: 1.5;
+    margin: 15px 0;
+  }
+
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.9em;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--code-text);
+  }
+
+  pre code {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: 1em;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  pre:hover .copy-btn { opacity: 1; }
+
+  .copy-btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .copy-btn.copied {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+  }
+
+  /* ---------- TABLES ---------- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 0.92em;
+    overflow: hidden;
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+  }
+
+  th {
+    background: var(--table-header-bg);
+    color: white;
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+  }
+
+  [data-theme="dark"] th { color: var(--text); }
+
+  td {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  tbody tr:nth-child(even) { background: var(--bg-alt); }
+
+  tbody tr:hover {
+    background: var(--bg-alt);
+    filter: brightness(0.97);
+  }
+
+  /* ---------- BLOCOS ---------- */
+  .note, .warning, .danger, .success {
+    border-left: 4px solid var(--accent);
+    background: var(--bg-alt);
+    padding: 12px 18px;
+    margin: 18px 0;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .note { border-left-color: var(--accent); }
+  .warning { border-left-color: var(--warning); background: var(--warning-bg); }
+  .danger { border-left-color: var(--danger); background: var(--danger-bg); }
+  .success { border-left-color: var(--success); background: var(--success-bg); }
+
+  .note strong, .warning strong, .danger strong, .success strong {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* ---------- BADGES ---------- */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .badge-success { background: var(--success); color: white; }
+  .badge-warning { background: var(--warning); color: white; }
+  .badge-danger { background: var(--danger); color: white; }
+  .badge-info { background: var(--accent); color: white; }
+
+  /* ---------- CHECKLIST ---------- */
+  .checklist {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .checklist li {
+    padding: 6px 0;
+    padding-left: 30px;
+    position: relative;
+  }
+
+  .checklist li::before {
+    content: "☐";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 1.2em;
+  }
+
+  .checklist li.done::before {
+    content: "✓";
+    color: var(--success);
+    font-weight: bold;
+  }
+
+  /* ---------- BACK TO TOP ---------- */
+  #backToTop {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    font-size: 1.3em;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+    z-index: 200;
+  }
+
+  #backToTop:hover { transform: scale(1.1); }
+  #backToTop.visible { display: flex; }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 1024px) {
+    .wrapper {
+      grid-template-columns: 1fr;
+      padding: 20px;
+    }
+
+    .sidebar {
+      position: static;
+      max-height: none;
+      margin-bottom: 20px;
+    }
+
+    .wrapper.sidebar-hidden {
+      grid-template-columns: 1fr;
+    }
+
+    .btn-hide-sidebar {
+      left: auto;
+      right: 20px;
+      top: 90px;
+    }
+
+    .btn-hide-sidebar.collapsed { left: auto; right: 20px; }
+  }
+
+  @media (max-width: 600px) {
+    header { padding: 15px; }
+    header h1 { font-size: 1em; }
+    .wrapper { padding: 15px; }
+    h2 { font-size: 1.4em; }
+    pre { font-size: 0.8em; }
+  }
+
+  /* ---------- PRINT ---------- */
+  @media print {
+    header, .sidebar, #backToTop, .copy-btn, .header-actions, .btn-hide-sidebar {
+      display: none !important;
+    }
+
+    .wrapper, .wrapper.sidebar-hidden {
+      grid-template-columns: 1fr;
+      max-width: 100%;
+      padding: 0;
+    }
+
+    body {
+      background: white;
+      color: black;
+      font-size: 11pt;
+    }
+
+    pre { border: 1px solid #ccc; page-break-inside: avoid; }
+    h2 { page-break-after: avoid; }
+    table { page-break-inside: avoid; }
+  }
+
+  footer {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-muted);
+    font-size: 0.85em;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-badge">
+    <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.4.6.1.8-.26.8-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.31.76-1.61-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1-.32 3.3 1.23.96-.27 1.98-.4 3-.4s2.04.13 3 .4c2.28-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.69.82.58C20.57 21.79 24 17.3 24 12c0-6.63-5.37-12-12-12z"/>
+    </svg>
+    <div>
+      <h1>Documentação — Gitea + Active Directory</h1>
+      <div class="subtitle">IFRN · empresa.local · Alpine Linux 3.23.x</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-toggle" id="themeToggle">🌙 Modo Escuro</button>
+    <button class="btn-toggle" onclick="window.print()">🖨️ Imprimir/PDF</button>
+  </div>
+</header>
+
+<button class="btn-hide-sidebar" id="btnHideSidebar" title="Ocultar menu">◀</button>
+
+<div class="wrapper" id="wrapper">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <h3>📑 Sumário</h3>
+    <nav>
+      <ul>
+        <li><a href="#sec1">1. Visão Geral</a></li>
+        <li><a href="#sec2">2. Pré-requisitos</a></li>
+        <li><a href="#sec3">3. Arquitetura</a></li>
+        <li><a href="#sec4">4. Instalação Automatizada</a></li>
+        <li><a href="#sec5">5. Verificação Pós-Instalação</a></li>
+        <li><a href="#sec6">6. Usuário Administrador</a></li>
+        <li><a href="#sec7">7. Configurações Recomendadas</a></li>
+        <li><a href="#sec8">8. Integração com AD</a></li>
+        <li><a href="#sec8-1" class="sub">8.1 Método 1 — LDAP simples <span class="badge badge-success" style="font-size:0.65em;">FUNCIONAL</span></a></li>
+        <li><a href="#sec8-2" class="sub">8.2 Método 2 — LDAPS com certificado</a></li>
+        <li><a href="#sec8-3" class="sub">8.3 Sincronização de usuários</a></li>
+        <li><a href="#sec8-4" class="sub">8.4 Mapeamento de grupos</a></li>
+        <li><a href="#sec8-5" class="sub">8.5 Diagnóstico de erros</a></li>
+        <li><a href="#sec9">9. Proxy Reverso com Nginx</a></li>
+        <li><a href="#sec10">10. Manutenção e Backup</a></li>
+        <li><a href="#sec11">11. Solução de Problemas</a></li>
+        <li><a href="#sec12">12. Referências</a></li>
+        <li><a href="#sec13">13. Checklist Final</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main>
+
+    <!-- ============ 1. VISÃO GERAL ============ -->
+    <section id="sec1">
+      <h2>1. Visão Geral</h2>
+
+      <h3>1.1 Objetivo</h3>
+      <p>Este documento descreve o processo completo de instalação, configuração e integração do <strong>Gitea</strong> — um serviço de hospedagem de repositórios Git leve e auto-hospedado — no servidor Alpine Linux, com autenticação delegada ao <strong>Active Directory (AD)</strong>.</p>
+
+      <h3>1.2 O que é o Gitea?</h3>
+      <p>O Gitea é uma aplicação web de código aberto escrita em Go, usada para hospedar repositórios Git. É uma alternativa leve ao GitHub, GitLab e Bitbucket, ideal para ambientes com recursos limitados:</p>
+      <ul>
+        <li><strong>Leve</strong>: binário único, baixo consumo de RAM (~100 MB).</li>
+        <li><strong>Multi-banco de dados</strong>: suporta PostgreSQL, MySQL, MariaDB, SQLite e MSSQL.</li>
+        <li><strong>Multi-plataforma</strong>: roda em Linux, Windows, macOS e ARM.</li>
+        <li><strong>Integração LDAP/AD</strong>: autenticação delegada a diretórios corporativos.</li>
+        <li><strong>API REST completa</strong> e suporte a Webhooks.</li>
+      </ul>
+
+      <h3>1.3 Escopo</h3>
+      <ul>
+        <li>Instalação automatizada via script Bash.</li>
+        <li>Configuração do PostgreSQL como banco de dados.</li>
+        <li>Inicialização do serviço via OpenRC.</li>
+        <li>Criação do usuário administrador.</li>
+        <li>Integração com Active Directory (AD) via LDAP — <strong>dois métodos</strong>: LDAP simples (laboratório) e LDAPS com certificado (produção).</li>
+        <li>Proxy reverso com Nginx (opcional).</li>
+      </ul>
+    </section>
+
+    <!-- ============ 2. PRÉ-REQUISITOS ============ -->
+    <section id="sec2">
+      <h2>2. Pré-requisitos</h2>
+
+      <h3>2.1 Ambiente</h3>
+      <table>
+        <thead><tr><th>Item</th><th>Especificação</th></tr></thead>
+        <tbody>
+          <tr><td>Sistema Operacional</td><td>Alpine Linux 3.23.x</td></tr>
+          <tr><td>Arquitetura</td><td>x86_64</td></tr>
+          <tr><td>Acesso</td><td>root (via <code>su</code> ou SSH)</td></tr>
+          <tr><td>RAM mínima</td><td>512 MB (recomendado: 1 GB)</td></tr>
+          <tr><td>Disco mínimo</td><td>2 GB (recomendado: 10 GB+)</td></tr>
+          <tr><td>Servidor Gitea</td><td><code>192.168.100.200</code></td></tr>
+          <tr><td>Domínio AD</td><td><code>empresa.local</code></td></tr>
+          <tr><td>Controlador de Domínio</td><td><code>192.168.100.10</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>2.2 Pacotes Necessários</h3>
+      <ul>
+        <li><code>git</code>, <code>git-lfs</code></li>
+        <li><code>bash</code>, <code>curl</code>, <code>openssh</code></li>
+        <li><code>coreutils</code>, <code>grep</code>, <code>less</code>, <code>lsof</code>, <code>dialog</code></li>
+        <li><code>gitea</code>, <code>gitea-openrc</code></li>
+        <li><code>postgresql17</code>, <code>postgresql17-contrib</code>, <code>postgresql17-openrc</code></li>
+      </ul>
+
+      <h3>2.3 Portas Utilizadas</h3>
+      <table>
+        <thead><tr><th>Porta</th><th>Protocolo</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td>3000</td><td>TCP</td><td>Interface HTTP do Gitea</td></tr>
+          <tr><td>22</td><td>TCP</td><td>Acesso SSH aos repositórios Git</td></tr>
+          <tr><td>5432</td><td>TCP</td><td>PostgreSQL (apenas localhost)</td></tr>
+          <tr><td>389</td><td>TCP</td><td>LDAP (Bind DN + busca de usuários)</td></tr>
+          <tr><td>636</td><td>TCP</td><td>LDAPS (opcional — requer certificado no AD)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ 3. ARQUITETURA ============ -->
+    <section id="sec3">
+      <h2>3. Arquitetura da Solução</h2>
+
+      <pre><code>┌─────────────────────────────────────────────────────────┐
+│  Servidor Alpine Linux (192.168.100.200)                │
+│                                                          │
+│  ┌────────────────┐        ┌──────────────────────┐     │
+│  │  Gitea (Go)    │◄──────►│  PostgreSQL 17       │     │
+│  │  Porta 3000    │        │  Porta 5432 (local)  │     │
+│  └────────┬───────┘        └──────────────────────┘     │
+│           │                                              │
+│           │ OpenRC (supervise-daemon)                   │
+│           │                                              │
+│  ┌────────▼───────┐        ┌──────────────────────┐     │
+│  │  /etc/gitea/   │        │  /var/lib/gitea/     │     │
+│  │  app.ini       │        │  repositories/       │     │
+│  └────────────────┘        │  custom/             │     │
+│                             │  data/               │     │
+│                             └──────────────────────┘     │
+└─────────────────────────────────────────────────────────┘
+           │
+           │ LDAP (porta 389) ou LDAPS (porta 636)
+           ▼
+┌─────────────────────────────────────────────────────────┐
+│  Controlador de Domínio (Active Directory)              │
+│  192.168.100.10 · empresa.local                         │
+│                                                          │
+│  Estrutura:                                              │
+│  DC=empresa,DC=local                                     │
+│   ├── CN=Users                                           │
+│   │    └── svc_gitea_ldap  (conta de serviço)           │
+│   ├── OU=Usuarios                                        │
+│   │    └── OU=Vendas                                     │
+│   │         └── CN=Carlos Gomes  (usuário)              │
+│   └── OU=Grupos                                          │
+│        └── CN=Gitea_Admins  (grupo admin)               │
+└─────────────────────────────────────────────────────────┘</code></pre>
+
+      <p><strong>Fluxo de autenticação:</strong></p>
+      <ol>
+        <li>Usuário acessa <code>http://192.168.100.200:3000</code>.</li>
+        <li>Gitea serve a interface web (embutida em Go).</li>
+        <li>No login, o Gitea consulta o AD via LDAP:
+          <ol>
+            <li><strong>Bind DN</strong> → autentica como <code>svc_gitea_ldap</code>.</li>
+            <li><strong>Busca</strong> → localiza o usuário pelo <code>sAMAccountName</code>.</li>
+            <li><strong>Bind novamente</strong> → valida a senha do usuário.</li>
+          </ol>
+        </li>
+        <li>Se autenticado, cria sessão local e libera acesso.</li>
+      </ol>
+    </section>
+
+    <!-- ============ 4. INSTALAÇÃO ============ -->
+    <section id="sec4">
+      <h2>4. Instalação Automatizada</h2>
+
+      <h3>4.1 Script Completo: <code>gitea-alpine-install.sh</code></h3>
+      <p>Salve o script abaixo como <code>/root/gitea-alpine-install.sh</code>:</p>
+
+      <pre><code>#!/usr/bin/env bash
+#
+# gitea-alpine-install.sh
+# Instalação completa do Gitea no Alpine Linux 3.23.x
+# Baseado em: https://wiki.alpinelinux.org/wiki/Gitea
+#
+set -euo pipefail
+
+# ==================================================================
+# 1. VARIÁVEIS CONFIGURÁVEIS
+# ==================================================================
+DB_TYPE="${DB_TYPE:-postgres}"
+DB_NAME="${DB_NAME:-gitea}"
+DB_USER="${DB_USER:-gitea}"
+GITEA_HTTP_PORT="${GITEA_HTTP_PORT:-3000}"
+GITEA_SSH_PORT="${GITEA_SSH_PORT:-22}"
+GITEA_APP_INI="/etc/gitea/app.ini"
+GITEA_WORK_DIR="/var/lib/gitea"
+GITEA_LOG_DIR="/var/log/gitea"
+GITEA_USER="gitea"
+GITEA_GROUP="www-data"
+
+# ==================================================================
+# 2. FUNÇÕES AUXILIARES
+# ==================================================================
+log()   { printf '\033[1;34m[INFO]\033[0m %s\n' "$*"; }
+error() { printf '\033[1;31m[ERRO]\033[0m %s\n' "$*" >&2; exit 1; }
+
+gen_random() {
+    head -c 512 /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | cut -c1-"${1:-24}"
+}
+
+cleanup() {
+    local exit_code=$?
+    if [[ $exit_code -ne 0 ]]; then
+        printf '\033[1;31m[ERRO]\033[0m Instalação interrompida (código: %d).\n' "$exit_code" >&2
+    fi
+}
+trap cleanup EXIT
+
+# ==================================================================
+# 3. VERIFICAR AMBIENTE ALPINE
+# ==================================================================
+[[ -f /etc/alpine-release ]] || error "Este script é destinado ao Alpine Linux."
+
+ALPINE_VERSION=$(cat /etc/alpine-release)
+log "Alpine Linux versão: ${ALPINE_VERSION}"
+
+ALPINE_MAJOR_MINOR="$(echo "${ALPINE_VERSION}" | cut -d. -f1,2)"
+if [ "$(printf '%s\n' "3.23" "${ALPINE_MAJOR_MINOR}" | sort -V | head -n1)" != "3.23" ]; then
+    log "Aviso: O script foi testado no Alpine 3.23.x."
+fi
+
+# ==================================================================
+# 4. GARANTIR RESOLUÇÃO DO HOSTNAME
+# ==================================================================
+HOSTNAME_SHORT="$(hostname)"
+if ! grep -qE "^\s*127\.0\.1\.1\s+${HOSTNAME_SHORT}\b" /etc/hosts 2>/dev/null; then
+    log "Adicionando ${HOSTNAME_SHORT} a /etc/hosts..."
+    echo "127.0.1.1    ${HOSTNAME_SHORT}" >> /etc/hosts
+fi
+
+GITEA_DOMAIN="${GITEA_DOMAIN:-$(hostname -f 2>/dev/null || hostname)}"
+GITEA_ROOT_URL="${GITEA_ROOT_URL:-http://${GITEA_DOMAIN}:${GITEA_HTTP_PORT}/}"
+
+log "Domínio Gitea: ${GITEA_DOMAIN}"
+log "URL raiz:      ${GITEA_ROOT_URL}"
+
+# ==================================================================
+# 5. INSTALAR DEPENDÊNCIAS BÁSICAS
+# ==================================================================
+log "Atualizando repositórios..."
+apk update
+
+log "Instalando dependências básicas..."
+apk add --no-cache \
+    git git-lfs bash curl openssh \
+    coreutils grep less lsof dialog
+
+# ==================================================================
+# 6. INSTALAR O GITEA E O SCRIPT OPENRC
+# ==================================================================
+log "Instalando Gitea e script OpenRC..."
+apk add --no-cache gitea gitea-openrc
+
+if ! id -u "${GITEA_USER}" &>/dev/null; then
+    log "Criando usuário ${GITEA_USER}..."
+    adduser -S -D -H -h "${GITEA_WORK_DIR}" -s /sbin/nologin -G "${GITEA_GROUP}" "${GITEA_USER}" 2>/dev/null || \
+        adduser -S -D -H -h "${GITEA_WORK_DIR}" -s /sbin/nologin "${GITEA_USER}"
+fi
+
+if ! id -nG "${GITEA_USER}" 2>/dev/null | grep -q "\b${GITEA_GROUP}\b"; then
+    log "Adicionando ${GITEA_USER} ao grupo ${GITEA_GROUP}..."
+    addgroup "${GITEA_USER}" "${GITEA_GROUP}" 2>/dev/null || true
+fi
+
+# ==================================================================
+# 7. INSTALAR E CONFIGURAR O BANCO DE DADOS
+# ==================================================================
+if [[ "${DB_TYPE}" == "postgres" ]]; then
+    log "Instalando PostgreSQL 17..."
+    apk add --no-cache postgresql17 postgresql17-contrib postgresql17-openrc
+
+    if [[ ! -f /var/lib/postgresql/data/PG_VERSION ]]; then
+        log "Cluster não inicializado. Preparando para setup..."
+
+        if rc-service postgresql status 2>/dev/null | grep -q "started"; then
+            log "Parando PostgreSQL para permitir o setup..."
+            rc-service postgresql stop
+            sleep 2
+        fi
+
+        log "Inicializando cluster PostgreSQL..."
+        /etc/init.d/postgresql setup
+    else
+        log "Cluster PostgreSQL já inicializado. Pulando setup."
+    fi
+
+    rc-service postgresql start
+    rc-update add postgresql default
+
+    DB_PASS="$(gen_random 24)"
+
+    log "Criando usuário '${DB_USER}' e banco '${DB_NAME}'..."
+    su postgres -c "psql -c \"CREATE USER ${DB_USER} WITH ENCRYPTED PASSWORD '${DB_PASS}';\"" 2>/dev/null || true
+    su postgres -c "psql -c \"CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};\"" 2>/dev/null || true
+    su postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};\"" 2>/dev/null || true
+
+    DB_HOST="127.0.0.1:5432"
+
+elif [[ "${DB_TYPE}" == "mariadb" ]]; then
+    log "Instalando MariaDB..."
+    apk add --no-cache mariadb mariadb-client
+
+    if [[ ! -d /var/lib/mysql/mysql ]]; then
+        log "Inicializando banco MariaDB..."
+        mysql_install_db --user=mysql --datadir=/var/lib/mysql
+    fi
+
+    rc-service mariadb start
+    rc-update add mariadb default
+
+    DB_PASS="$(gen_random 24)"
+
+    log "Criando banco '${DB_NAME}' e usuário '${DB_USER}'..."
+    mysql -u root &lt;&lt;-EOF
+        CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';
+        GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';
+        FLUSH PRIVILEGES;
+EOF
+
+    DB_HOST="127.0.0.1:3306"
+else
+    error "Tipo de banco inválido: '${DB_TYPE}'. Use 'postgres' ou 'mariadb'."
+fi
+
+# ==================================================================
+# 8. CRIAR DIRETÓRIOS DO GITEA
+# ==================================================================
+log "Criando diretórios de trabalho, log e customização..."
+mkdir -p "${GITEA_WORK_DIR}"/{custom,data,repositories}
+mkdir -p "${GITEA_LOG_DIR}"
+
+chown -R "${GITEA_USER}:${GITEA_GROUP}" "${GITEA_WORK_DIR}"
+chown -R "${GITEA_USER}:${GITEA_GROUP}" "${GITEA_LOG_DIR}"
+chmod -R 750 "${GITEA_WORK_DIR}"
+chmod -R 750 "${GITEA_LOG_DIR}"
+
+# ==================================================================
+# 9. CONFIGURAR O ARQUIVO app.ini
+# ==================================================================
+log "Gerando ${GITEA_APP_INI}..."
+
+if [[ -f "${GITEA_APP_INI}" ]]; then
+    BACKUP="${GITEA_APP_INI}.bak.$(date +%s)"
+    cp "${GITEA_APP_INI}" "${BACKUP}"
+    log "Backup criado: ${BACKUP}"
+fi
+
+mkdir -p "$(dirname "${GITEA_APP_INI}")"
+
+SECRET_KEY="$(gen_random 32)"
+INTERNAL_TOKEN="$(gen_random 32)"
+JWT_SECRET="$(gen_random 32)"
+
+if [[ "${DB_TYPE}" == "mariadb" ]]; then
+    GITEA_DB_TYPE="mysql"
+else
+    GITEA_DB_TYPE="${DB_TYPE}"
+fi
+
+cat &gt; "${GITEA_APP_INI}" &lt;&lt;EOF
+APP_NAME = Gitea: Git with a cup of tea
+RUN_USER = ${GITEA_USER}
+RUN_MODE = prod
+
+[server]
+PROTOCOL         = http
+DOMAIN           = ${GITEA_DOMAIN}
+HTTP_ADDR        = 0.0.0.0
+HTTP_PORT        = ${GITEA_HTTP_PORT}
+ROOT_URL         = ${GITEA_ROOT_URL}
+DISABLE_SSH      = false
+SSH_PORT         = ${GITEA_SSH_PORT}
+SSH_LISTEN_PORT  = ${GITEA_SSH_PORT}
+OFFLINE_MODE     = false
+LFS_START_SERVER = true
+
+[database]
+DB_TYPE  = ${GITEA_DB_TYPE}
+HOST     = ${DB_HOST}
+NAME     = ${DB_NAME}
+USER     = ${DB_USER}
+PASSWD   = ${DB_PASS}
+SCHEMA   = public
+SSL_MODE = disable
+
+[repository]
+ROOT = ${GITEA_WORK_DIR}/repositories
+
+[security]
+INSTALL_LOCK   = true
+SECRET_KEY     = ${SECRET_KEY}
+INTERNAL_TOKEN = ${INTERNAL_TOKEN}
+
+[oauth2]
+JWT_SECRET = ${JWT_SECRET}
+
+[service]
+DISABLE_REGISTRATION   = false
+REQUIRE_SIGNIN_VIEW    = false
+REGISTER_EMAIL_CONFIRM = false
+
+[log]
+MODE      = console
+LEVEL     = info
+ROOT_PATH = ${GITEA_LOG_DIR}
+
+[mailer]
+ENABLED = false
+
+[session]
+PROVIDER = file
+
+[picture]
+AVATAR_UPLOAD_PATH            = ${GITEA_WORK_DIR}/data/avatars
+REPOSITORY_AVATAR_UPLOAD_PATH = ${GITEA_WORK_DIR}/data/repo-avatars
+
+[attachment]
+PATH = ${GITEA_WORK_DIR}/data/attachments
+EOF
+
+chown "${GITEA_USER}:${GITEA_GROUP}" "${GITEA_APP_INI}"
+chmod 640 "${GITEA_APP_INI}"
+
+log "Arquivo ${GITEA_APP_INI} criado com sucesso."
+
+# ==================================================================
+# 10. EXECUTAR MIGRAÇÕES DO BANCO DE DADOS
+# ==================================================================
+log "Executando migrações do banco de dados..."
+su - "${GITEA_USER}" -c "GITEA_WORK_DIR=${GITEA_WORK_DIR} gitea migrate --config ${GITEA_APP_INI}"
+
+# ==================================================================
+# 11. HABILITAR E INICIAR O SERVIÇO GITEA
+# ==================================================================
+log "Habilitando e iniciando o serviço Gitea..."
+rc-update add gitea default
+rc-service gitea start
+
+sleep 3
+if rc-service gitea status | grep -q "started"; then
+    log "Serviço Gitea está em execução."
+else
+    log "Aviso: Verifique com: rc-service gitea status"
+fi
+
+# ==================================================================
+# 12. INFORMAÇÕES FINAIS
+# ==================================================================
+echo ""
+echo "======================================================"
+echo "  Gitea instalado e configurado com sucesso!"
+echo "======================================================"
+echo "  URL de acesso:      ${GITEA_ROOT_URL}"
+echo "  Porta HTTP:         ${GITEA_HTTP_PORT}"
+echo "  Porta SSH:          ${GITEA_SSH_PORT}"
+echo ""
+echo "  Banco de dados:     ${DB_TYPE}"
+echo "  Host do banco:      ${DB_HOST}"
+echo "  Nome do banco:      ${DB_NAME}"
+echo "  Usuário do banco:   ${DB_USER}"
+echo "  Senha do banco:     ${DB_PASS}"
+echo "======================================================"
+echo ""</code></pre>
+
+      <h3>4.2 Como Executar</h3>
+      <pre><code># 1. Como root
+su -
+
+# 2. Salve o script
+nano /root/gitea-alpine-install.sh
+
+# 3. Permissão de execução
+chmod +x /root/gitea-alpine-install.sh
+
+# 4. Execute
+cd /root
+./gitea-alpine-install.sh</code></pre>
+
+      <h3>4.3 Variáveis Configuráveis</h3>
+      <table>
+        <thead><tr><th>Variável</th><th>Padrão</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td><code>DB_TYPE</code></td><td><code>postgres</code></td><td><code>postgres</code> ou <code>mariadb</code></td></tr>
+          <tr><td><code>DB_NAME</code></td><td><code>gitea</code></td><td>Nome do banco</td></tr>
+          <tr><td><code>DB_USER</code></td><td><code>gitea</code></td><td>Usuário do banco</td></tr>
+          <tr><td><code>GITEA_HTTP_PORT</code></td><td><code>3000</code></td><td>Porta HTTP</td></tr>
+          <tr><td><code>GITEA_SSH_PORT</code></td><td><code>22</code></td><td>Porta SSH</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ 5. VERIFICAÇÃO ============ -->
+    <section id="sec5">
+      <h2>5. Verificação Pós-Instalação</h2>
+
+      <h3>5.1 Checar Serviços</h3>
+      <pre><code># PostgreSQL
+rc-service postgresql status
+
+# Gitea
+rc-service gitea status
+
+# Habilitados no boot
+rc-update show | grep -E 'gitea|postgresql'</code></pre>
+
+      <h3>5.2 Verificar Portas</h3>
+      <pre><code>ss -tlnp | grep -E ':3000|:5432'</code></pre>
+
+      <h3>5.3 Testar HTTP</h3>
+      <pre><code>curl -I http://localhost:3000
+# Esperado: HTTP/1.1 200 OK</code></pre>
+
+      <h3>5.4 Verificar Estrutura de Diretórios</h3>
+      <pre><code>ls -la /etc/gitea/
+ls -la /var/lib/gitea/
+ls -la /var/log/gitea/
+
+stat -c "%U:%G %a %n" /etc/gitea/app.ini
+# Esperado: gitea:www-data 640 /etc/gitea/app.ini</code></pre>
+    </section>
+
+    <!-- ============ 6. ADMIN ============ -->
+    <section id="sec6">
+      <h2>6. Criação do Usuário Administrador</h2>
+      <p>O primeiro usuário registrado no Gitea se torna automaticamente <strong>administrador</strong>.</p>
+
+      <h3>6.1 Método A: Pela Interface Web</h3>
+      <ol>
+        <li>Acesse <code>http://192.168.100.200:3000</code>.</li>
+        <li>Clique em <strong>"Need an account? Register now."</strong></li>
+        <li>Preencha:
+          <ul>
+            <li><strong>Nome de usuário:</strong> <code>admin</code></li>
+            <li><strong>E-mail:</strong> <code>admin@empresa.local</code></li>
+            <li><strong>Senha:</strong> (forte, mínimo 8 caracteres)</li>
+          </ul>
+        </li>
+        <li>Clique em <strong>Registrar</strong>.</li>
+      </ol>
+
+      <h3>6.2 Método B: Pelo Terminal (Recomendado)</h3>
+      <pre><code>su - gitea -c "gitea admin user create \
+    --admin \
+    --username admin \
+    --password 'SuaSenhaForteAqui123!' \
+    --email 'admin@empresa.local' \
+    --config /etc/gitea/app.ini"</code></pre>
+
+      <p><strong>Saída esperada:</strong> <code>New user 'admin' has been successfully created!</code></p>
+
+      <h3>6.3 Listar Usuários</h3>
+      <pre><code>su - gitea -c "gitea admin user list --config /etc/gitea/app.ini"</code></pre>
+
+      <h3>6.4 Alterar Senha</h3>
+      <pre><code>su - gitea -c "gitea admin user change-password \
+    --username admin \
+    --password 'NovaSenhaForte!' \
+    --config /etc/gitea/app.ini"</code></pre>
+    </section>
+
+    <!-- ============ 7. CONFIGURAÇÕES ============ -->
+    <section id="sec7">
+      <h2>7. Configurações Recomendadas Pós-Instalação</h2>
+
+      <h3>7.1 Desabilitar Registro Público</h3>
+      <p>Depois de integrar com AD, apenas usuários do domínio devem poder logar.</p>
+      <p><strong>Administração do Site → Configurações → Desmarque "Permitir Registro de Usuários"</strong></p>
+      <p>Ou via <code>app.ini</code>:</p>
+      <pre><code>[service]
+DISABLE_REGISTRATION = true</code></pre>
+
+      <h3>7.2 Configurar E-mail (Opcional)</h3>
+      <pre><code>[mailer]
+ENABLED = true
+HOST = smtp.empresa.local:587
+FROM = gitea@empresa.local
+USER = gitea@empresa.local
+PASSWD = senha_do_email</code></pre>
+
+      <h3>7.3 Configurar Captcha (Opcional)</h3>
+      <pre><code>[service]
+ENABLE_CAPTCHA = true</code></pre>
+
+      <h3>7.4 Reiniciar Após Alterações</h3>
+      <pre><code>rc-service gitea restart</code></pre>
+    </section>
+
+    <!-- ============ 8. AD ============ -->
+    <section id="sec8">
+      <h2>8. Integração com Active Directory (AD)</h2>
+
+      <p>O Gitea oferece suporte nativo a autenticação LDAP/AD. Este documento cobre <strong>dois métodos</strong>:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Método</th>
+            <th>Protocolo</th>
+            <th>Porta</th>
+            <th>Segurança</th>
+            <th>Indicado para</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Método 1</strong> — LDAP simples</td>
+            <td>LDAP (Unencrypted)</td>
+            <td>389</td>
+            <td>⚠️ Senhas em texto claro</td>
+            <td><span class="badge badge-success">LABORATÓRIO</span></td>
+          </tr>
+          <tr>
+            <td><strong>Método 2</strong> — LDAPS</td>
+            <td>LDAPS (SSL/TLS)</td>
+            <td>636</td>
+            <td>✅ Criptografado</td>
+            <td><span class="badge badge-info">PRODUÇÃO</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ----------- 8.1 MÉTODO 1 ----------- -->
+      <h3 id="sec8-1">8.1 Método 1 — LDAP simples (sem TLS) <span class="badge badge-success">FUNCIONAL</span></h3>
+
+      <div class="success">
+        <strong>✅ Método validado em laboratório</strong>
+        Este método foi testado com sucesso no domínio <code>empresa.local</code>. É a solução mais rápida para colocar o laboratório em funcionamento.
+      </div>
+
+      <h4>Pré-requisitos no AD</h4>
+      <p>Antes de configurar o Gitea, garanta que existam no AD:</p>
+      <ul>
+        <li><strong>Conta de serviço</strong>: <code>svc_gitea_ldap</code>
+          <ul>
+            <li>DN: <code>CN=svc_gitea_ldap,CN=Users,DC=empresa,DC=local</code></li>
+            <li>Permissão: apenas leitura nos objetos de usuário</li>
+          </ul>
+        </li>
+        <li><strong>Usuários</strong> cadastrados em alguma OU (ex: <code>OU=Usuarios,OU=Vendas,DC=empresa,DC=local</code>)</li>
+      </ul>
+
+      <h4>Configuração no Gitea</h4>
+      <ol>
+        <li>Faça login como <code>admin</code>.</li>
+        <li>Vá em <strong>Administração do Site</strong> → <strong>Identidade &amp; Acesso</strong> → <strong>Fontes de Autenticação</strong>.</li>
+        <li>Clique em <strong>Adicionar Fonte de Autenticação</strong> e selecione <strong>LDAP (via BindDN)</strong>.</li>
+        <li>Preencha conforme a tabela abaixo:</li>
+      </ol>
+
+      <table>
+        <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Tipo de autenticação</strong></td><td>LDAP (via BindDN)</td></tr>
+          <tr><td><strong>Nome da autenticação</strong></td><td><code>svc_gitea_ldap</code></td></tr>
+          <tr><td><strong>Protocolo de segurança</strong></td><td><span class="badge badge-warning">Sem criptografia</span> (Unencrypted)</td></tr>
+          <tr><td><strong>Servidor</strong></td><td><code>192.168.100.10</code></td></tr>
+          <tr><td><strong>Porta</strong></td><td><code>389</code></td></tr>
+          <tr><td><strong>Pular verificação de TLS</strong></td><td>Marcado (irrelevante sem TLS)</td></tr>
+          <tr><td><strong>Vincular DN</strong></td><td><code>cn=svc_gitea_ldap,cn=Users,dc=empresa,dc=local</code></td></tr>
+          <tr><td><strong>Vincular senha</strong></td><td><em>(senha da conta de serviço)</em></td></tr>
+          <tr><td><strong>Base de pesquisa do usuário</strong></td><td><code>dc=empresa,dc=local</code></td></tr>
+          <tr><td><strong>Filtro de usuário</strong></td><td><code>(&amp;(objectCategory=Person)(sAMAccountName=%s)(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))</code></td></tr>
+          <tr><td><strong>Filtro de administrador</strong></td><td><em>(deixe em branco para testes)</em></td></tr>
+          <tr><td><strong>Filtro de restrição</strong></td><td><em>(deixe em branco)</em></td></tr>
+          <tr><td><strong>Atributo nome de usuário</strong></td><td><code>sAMAccountName</code></td></tr>
+          <tr><td><strong>Atributo primeiro nome</strong></td><td><code>givenName</code></td></tr>
+          <tr><td><strong>Atributo sobrenome</strong></td><td><code>sn</code></td></tr>
+          <tr><td><strong>Atributo e-mail</strong></td><td><code>userPrincipalName</code> ⬅️ <strong>IMPORTANTE</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="warning">
+        <strong>⚠️ Por que usar <code>userPrincipalName</code> e não <code>mail</code>?</strong>
+        Em muitos laboratórios, o atributo <code>mail</code> do AD está vazio. O Gitea <strong>exige</strong> um e-mail único para cada usuário. Usando <code>userPrincipalName</code> (que sempre tem o formato <code>usuario@dominio</code>), garantimos que o Gitea consiga criar a conta.
+        <br><br>
+        Em produção, o ideal é preencher o <code>mail</code> de cada usuário no AD e trocar de volta para <code>mail</code>.
+      </div>
+
+      <h4>Validar no terminal (antes de testar no Gitea)</h4>
+      <pre><code># Instale o cliente LDAP
+apk add openldap-clients
+
+# Teste 1: bind com a conta de serviço
+ldapsearch -x -H ldap://192.168.100.10:389 \
+    -D "cn=svc_gitea_ldap,cn=Users,dc=empresa,dc=local" \
+    -w "Senha.senha" \
+    -b "dc=empresa,dc=local" \
+    -s base "(objectclass=*)"
+
+# Teste 2: buscar um usuário específico
+ldapsearch -x -H ldap://192.168.100.10:389 \
+    -D "cn=svc_gitea_ldap,cn=Users,dc=empresa,dc=local" \
+    -w "Senha.senha" \
+    -b "dc=empresa,dc=local" \
+    "(sAMAccountName=carlosgomes)"</code></pre>
+
+      <p><strong>Resultado esperado:</strong> retorno com os atributos do usuário (<code>sAMAccountName</code>, <code>displayName</code>, etc.).</p>
+
+      <h4>Testar o login</h4>
+      <ol>
+        <li>Faça logout do Gitea.</li>
+        <li>Na tela de login, use:
+          <ul>
+            <li><strong>Usuário:</strong> <code>carlosgomes</code> (o <code>sAMAccountName</code>)</li>
+            <li><strong>Senha:</strong> a senha do AD</li>
+          </ul>
+        </li>
+        <li>Se funcionar, o usuário será criado automaticamente no Gitea.</li>
+      </ol>
+    </section>
+
+    <!-- ----------- 8.2 MÉTODO 2 ----------- -->
+    <section id="sec8-2">
+      <h3>8.2 Método 2 — LDAPS com certificado no AD <span class="badge badge-info">PRODUÇÃO</span></h3>
+
+      <p>Este método usa criptografia forte (LDAPS). Para isso, o controlador de domínio precisa ter um <strong>certificado válido no repositório de serviço NTDS</strong>. Sem isso, o AD rejeita qualquer tentativa de TLS.</p>
+
+      <div class="danger">
+        <strong>🚫 Sintoma de certificado ausente</strong>
+        Ao tentar LDAPS sem certificado, você verá:
+        <pre style="background: transparent; border: none; padding: 5px 0; margin: 8px 0;"><code>ldap_start_tls: Server is unavailable (52)
+additional info: LdapErr: DSID-0C0915E3, comment: Error initializing SSL/TLS</code></pre>
+        Ou, no log do Gitea:
+        <pre style="background: transparent; border: none; padding: 5px 0; margin: 8px 0;"><code>LDAP Connect error: read: connection reset by peer</code></pre>
+      </div>
+
+      <h4>Passo 1: Verificar o certificado no AD</h4>
+      <p>No servidor Windows do AD, abra o <strong>PowerShell como Administrador</strong> e execute:</p>
+      <pre><code>certutil -store -service NTDS</code></pre>
+      <p>Se retornar vazio ou apenas certificados sem <strong>"Server Authentication"</strong>, é preciso gerar um novo.</p>
+
+      <h4>Passo 2: Gerar certificado autoassinado</h4>
+      <p>No PowerShell do AD (Administrador):</p>
+      <pre><code>$cert = New-SelfSignedCertificate `
+    -DnsName "SERVIDOR1.empresa.local", "empresa.local" `
+    -CertStoreLocation "Cert:\LocalMachine\My" `
+    -KeyAlgorithm RSA `
+    -KeyLength 2048 `
+    -NotAfter (Get-Date).AddYears(5) `
+    -KeyUsage DigitalSignature, KeyEncipherment `
+    -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.1")
+
+$cert.Thumbprint</code></pre>
+
+      <p>Ou, se preferir interface gráfica, use <code>certlm.msc</code> e solicite um certificado usando o template <strong>"Kerberos Authentication"</strong>.</p>
+
+      <h4>Passo 3: Mover o certificado para o repositório NTDS</h4>
+      <p>O AD <strong>não usa</strong> o certificado do repositório <code>LocalMachine\My</code> para LDAPS. Ele exige o repositório específico do serviço NTDS.</p>
+
+      <pre><code># No PowerShell (como Administrador)
+$thumbprint = "COLE_AQUI_O_THUMBPRINT"
+
+$pwd = ConvertTo-SecureString -String "SenhaTemp123!" -Force -AsPlainText
+Export-PfxCertificate -Cert "Cert:\LocalMachine\My\$thumbprint" `
+    -FilePath "C:\temp\ldaps.pfx" -Password $pwd
+
+# Importar no repositório NTDS
+certutil -importPFX -service NTDS C:\temp\ldaps.pfx NoExport</code></pre>
+
+      <h4>Passo 4: Reiniciar o serviço NTDS</h4>
+      <pre><code>Restart-Service NTDS -Force</code></pre>
+      <p>Aguarde 1 minuto para o serviço subir completamente.</p>
+
+      <h4>Passo 5: Testar do servidor Alpine</h4>
+      <pre><code># Testar a conexão TLS
+openssl s_client -connect 192.168.100.10:636 -showcerts
+
+# Testar o bind com LDAPS
+ldapsearch -x -H ldaps://192.168.100.10:636 \
+    -D "cn=svc_gitea_ldap,cn=Users,dc=empresa,dc=local" \
+    -w "Senha.senha" \
+    -b "dc=empresa,dc=local" \
+    -s base "(objectclass=*)"</code></pre>
+
+      <p>Se o <code>openssl s_client</code> exibir os detalhes do certificado, o handshake TLS está funcionando.</p>
+
+      <h4>Passo 6 (se necessário): Importar a CA do AD no Alpine</h4>
+      <p>Se o certificado for emitido por uma CA interna, importe-a no Alpine para que o sistema confie nela:</p>
+
+      <pre><code># Copie o certificado da CA para o servidor
+cp /caminho/ad-ca.crt /usr/local/share/ca-certificates/
+
+# Atualize o repositório de certificados
+update-ca-certificates
+
+# Reinicie o Gitea
+rc-service gitea restart</code></pre>
+
+      <h4>Passo 7: Atualizar a fonte de autenticação no Gitea</h4>
+      <p>Edite a fonte <code>svc_gitea_ldap</code> e altere:</p>
+
+      <table>
+        <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Protocolo de segurança</strong></td><td><span class="badge badge-success">LDAPS</span></td></tr>
+          <tr><td><strong>Porta</strong></td><td><code>636</code></td></tr>
+          <tr><td><strong>Pular verificação de TLS</strong></td><td>Marcado (para certificado autoassinado)<br>Desmarcado (se o certificado for de CA confiável)</td></tr>
+        </tbody>
+      </table>
+
+      <p>Salve e teste o login novamente.</p>
+
+      <div class="note">
+        <strong>💡 Sobre o certificado autoassinado</strong>
+        Se você marcou <strong>"Pular verificação de TLS"</strong>, o Gitea aceitará qualquer certificado. Isso é aceitável em produção interna, mas o ideal é usar um certificado emitido por uma CA confiável (interna ou pública).
+      </div>
+    </section>
+
+    <!-- ----------- 8.3 SINCRONIZAÇÃO ----------- -->
+    <section id="sec8-3">
+      <h3>8.3 Sincronização de Usuários do AD</h3>
+
+      <p>O Gitea pode importar periodicamente todos os usuários do AD. Na configuração da fonte de autenticação, marque <strong>"Ativar Sincronização de Usuário"</strong>.</p>
+
+      <p>Ajuste a frequência no <code>app.ini</code>:</p>
+      <pre><code>[cron.sync_external_users]
+RUN_AT_START = true
+SCHEDULE = 0 0 3 * * *    # todo dia às 03:00</code></pre>
+
+      <p>Para forçar uma sincronização imediata via CLI:</p>
+      <pre><code>su - gitea -c "gitea admin auth sync --config /etc/gitea/app.ini"</code></pre>
+    </section>
+
+    <!-- ----------- 8.4 MAPEAMENTO ----------- -->
+    <section id="sec8-4">
+      <h3>8.4 Mapeamento de Grupos do AD para Times do Gitea</h3>
+
+      <ol>
+        <li>Crie uma <strong>Organização</strong> no Gitea (ex: <code>ifrn</code>).</li>
+        <li>Vá em <strong>Organização → Equipes</strong> e crie uma equipe (ex: <code>Desenvolvedores</code>).</li>
+        <li>Edite a equipe e vá em <strong>Sincronização de Grupo Externo</strong>.</li>
+        <li>Informe o DN do grupo do AD:
+          <pre><code>CN=Desenvolvedores,OU=Grupos,DC=empresa,DC=local</code></pre>
+        </li>
+        <li>Associe o nível de permissão (Read/Write/Admin).</li>
+        <li>Ao sincronizar, os membros do grupo AD entram automaticamente na equipe.</li>
+      </ol>
+
+      <p>Para definir administradores do Gitea via grupo do AD, preencha o campo <strong>Filtro de administrador</strong> com:</p>
+      <pre><code>(memberOf=CN=Gitea_Admins,OU=Grupos,DC=empresa,DC=local)</code></pre>
+    </section>
+
+    <!-- ----------- 8.5 DIAGNÓSTICO ----------- -->
+    <section id="sec8-5">
+      <h3>8.5 Diagnóstico de Erros</h3>
+
+      <p>Aumente o nível de log para diagnosticar problemas:</p>
+      <pre><code>[log]
+LEVEL = Trace</code></pre>
+
+      <p>Reinicie e acompanhe em tempo real:</p>
+      <pre><code>rc-service gitea restart
+tail -f /var/log/gitea/gitea.log</code></pre>
+
+      <h4>Erros comuns e soluções</h4>
+      <table>
+        <thead>
+          <tr><th>Erro no log</th><th>Causa</th><th>Solução</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>LDAP Result Code 200 "Network Error": read: connection reset by peer</code></td>
+            <td>Falha no handshake TLS (certificado ausente/inválido no AD)</td>
+            <td>Use LDAP simples (porta 389) ou corrija o certificado no AD</td>
+          </tr>
+          <tr>
+            <td><code>LDAP Result Code 200 "Network Error": dial tcp ...: i/o timeout</code></td>
+            <td>Porta errada ou firewall bloqueando</td>
+            <td>Verifique a porta (389 ou 636) e o firewall</td>
+          </tr>
+          <tr>
+            <td><code>LDAP Result Code 49 "Invalid Credentials"</code></td>
+            <td>Senha do Bind DN incorreta</td>
+            <td>Confirme a senha da conta de serviço no AD</td>
+          </tr>
+          <tr>
+            <td><code>LDAP Result Code 32 "No Such Object"</code></td>
+            <td>Base de busca inválida</td>
+            <td>Corrija o campo "Base de pesquisa do usuário"</td>
+          </tr>
+          <tr>
+            <td><code>Email address does not exist</code></td>
+            <td>Atributo <code>mail</code> vazio no AD</td>
+            <td>Use <code>userPrincipalName</code> como atributo e-mail</td>
+          </tr>
+          <tr>
+            <td><code>user does not exist</code></td>
+            <td>Filtro de usuário não encontrou a conta</td>
+            <td>Teste o filtro com <code>ldapsearch</code></td>
+          </tr>
+          <tr>
+            <td><code>Error initializing SSL/TLS, data 0, v4563</code></td>
+            <td>Serviço LDAP do AD sem certificado no repositório NTDS</td>
+            <td>Corrija o certificado no AD (Método 2)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Ferramentas de diagnóstico</h4>
+      <pre><code># Instalar cliente LDAP
+apk add openldap-clients
+
+# Testar bind com conta de serviço
+ldapsearch -x -H ldap://192.168.100.10:389 \
+    -D "cn=svc_gitea_ldap,cn=Users,dc=empresa,dc=local" \
+    -w "Senha" \
+    -b "dc=empresa,dc=local" \
+    -s base "(objectclass=*)"
+
+# Testar handshake TLS
+openssl s_client -connect 192.168.100.10:636 -showcerts
+
+# Testar conectividade da porta
+nc -zv 192.168.100.10 636</code></pre>
+    </section>
+
+    <!-- ============ 9. NGINX ============ -->
+    <section id="sec9">
+      <h2>9. Proxy Reverso com Nginx (Portas 80/443)</h2>
+
+      <h3>9.1 Por que usar Proxy Reverso?</h3>
+      <ul>
+        <li>Acesso sem <code>:3000</code> na URL.</li>
+        <li>HTTPS (cadeado de segurança).</li>
+        <li>Melhor performance e cache.</li>
+      </ul>
+
+      <h3>9.2 Instalação do Nginx</h3>
+      <pre><code>apk add nginx
+rc-service nginx start
+rc-update add nginx default</code></pre>
+
+      <h3>9.3 Configuração HTTP (Porta 80)</h3>
+      <p>Crie <code>/etc/nginx/http.d/gitea.conf</code>:</p>
+      <pre><code>server {
+    listen 80;
+    server_name 192.168.100.200 empresa.local;
+
+    client_max_body_size 512M;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+
+      <pre><code>nginx -t
+rc-service nginx restart</code></pre>
+
+      <p>Ajuste o <code>app.ini</code>:</p>
+      <pre><code>[server]
+ROOT_URL = http://192.168.100.200/</code></pre>
+
+      <h3>9.4 HTTPS com Certificado Autoassinado</h3>
+      <pre><code>mkdir -p /etc/ssl/gitea
+openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+    -keyout /etc/ssl/gitea/gitea.key \
+    -out /etc/ssl/gitea/gitea.crt \
+    -subj "/C=BR/ST=RN/L=Natal/O=IFRN/CN=empresa.local"</code></pre>
+
+      <pre><code>server {
+    listen 443 ssl;
+    server_name empresa.local;
+
+    ssl_certificate     /etc/ssl/gitea/gitea.crt;
+    ssl_certificate_key /etc/ssl/gitea/gitea.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    client_max_body_size 512M;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+    </section>
+
+    <!-- ============ 10. BACKUP ============ -->
+    <section id="sec10">
+      <h2>10. Manutenção e Backup</h2>
+
+      <h3>10.1 Backup Completo</h3>
+      <pre><code>su - gitea -c "gitea dump \
+    --config /etc/gitea/app.ini \
+    --file /var/lib/gitea/backup/gitea-backup-$(date +%Y%m%d).zip"</code></pre>
+
+      <h3>10.2 Backup do PostgreSQL</h3>
+      <pre><code>su postgres -c "pg_dump gitea > /var/lib/gitea/backup/gitea-db-$(date +%Y%m%d).sql"</code></pre>
+
+      <h3>10.3 Automatizar (Cron)</h3>
+      <p>Crie <code>/etc/periodic/daily/gitea-backup</code>:</p>
+      <pre><code>#!/bin/sh
+BACKUP_DIR="/var/lib/gitea/backup"
+mkdir -p "$BACKUP_DIR"
+su - gitea -c "gitea dump --config /etc/gitea/app.ini \
+    --file ${BACKUP_DIR}/gitea-$(date +%Y%m%d).zip"
+ls -t ${BACKUP_DIR}/gitea-*.zip | tail -n +8 | xargs rm -f</code></pre>
+
+      <pre><code>chmod +x /etc/periodic/daily/gitea-backup</code></pre>
+
+      <h3>10.4 Restaurar Backup</h3>
+      <pre><code>cd /tmp
+unzip /var/lib/gitea/backup/gitea-20251012.zip -d gitea-restore
+
+su postgres -c "psql gitea < /tmp/gitea-restore/gitea-db.sql"
+
+cp -r /tmp/gitea-restore/repositories/* /var/lib/gitea/repositories/
+cp -r /tmp/gitea-restore/data/* /var/lib/gitea/data/
+cp /tmp/gitea-restore/app.ini /etc/gitea/app.ini
+chown -R gitea:www-data /var/lib/gitea
+
+rc-service gitea restart</code></pre>
+
+      <h3>10.5 Atualização do Gitea</h3>
+      <pre><code>su - gitea -c "gitea dump --config /etc/gitea/app.ini --file /var/lib/gitea/backup/pre-upgrade.zip"
+
+apk update
+apk upgrade gitea gitea-openrc
+
+rc-service gitea restart
+su - gitea -c "gitea --version"</code></pre>
+    </section>
+
+    <!-- ============ 11. TROUBLESHOOTING ============ -->
+    <section id="sec11">
+      <h2>11. Solução de Problemas</h2>
+
+      <h3>11.1 O serviço não inicia</h3>
+      <pre><code>rc-service gitea status
+tail -50 /var/log/gitea/gitea.log
+ls -la /var/lib/gitea/</code></pre>
+
+      <h3>11.2 Erro 502 Bad Gateway no Nginx</h3>
+      <pre><code>rc-service gitea status
+curl -I http://127.0.0.1:3000
+tail -50 /var/log/nginx/error.log</code></pre>
+
+      <h3>11.3 Login do AD falha</h3>
+      <ol>
+        <li>Verifique se a fonte está habilitada.</li>
+        <li>Aumente o log para <code>Trace</code>.</li>
+        <li>Teste com <code>ldapsearch</code>.</li>
+        <li>Confira firewall entre Gitea e AD.</li>
+      </ol>
+
+      <h3>11.4 Comandos úteis de diagnóstico</h3>
+      <pre><code># Status geral
+rc-service gitea status
+rc-service postgresql status
+rc-service nginx status
+
+# Logs em tempo real
+tail -f /var/log/gitea/gitea.log
+
+# Filtrar erros
+grep -i "error\|fail\|fatal" /var/log/gitea/gitea.log
+
+# Processos
+ps aux | grep gitea
+
+# Conexões
+ss -tnp | grep 3000</code></pre>
+    </section>
+
+    <!-- ============ 12. REFERÊNCIAS ============ -->
+    <section id="sec12">
+      <h2>12. Referências</h2>
+
+      <h3>12.1 Documentação Oficial</h3>
+      <ul>
+        <li><strong>Alpine Linux Wiki – Gitea:</strong> <a href="https://wiki.alpinelinux.org/wiki/Gitea" target="_blank">https://wiki.alpinelinux.org/wiki/Gitea</a></li>
+        <li><strong>Gitea Docs – Instalação:</strong> <a href="https://docs.gitea.com/installation/install-from-package" target="_blank">https://docs.gitea.com/installation/install-from-package</a></li>
+        <li><strong>Gitea Docs – app.ini:</strong> <a href="https://docs.gitea.com/administration/config-cheat-sheet" target="_blank">https://docs.gitea.com/administration/config-cheat-sheet</a></li>
+        <li><strong>Gitea Docs – LDAP:</strong> <a href="https://docs.gitea.com/administration/authentication" target="_blank">https://docs.gitea.com/administration/authentication</a></li>
+        <li><strong>PostgreSQL no Alpine:</strong> <a href="https://wiki.alpinelinux.org/wiki/PostgreSQL" target="_blank">https://wiki.alpinelinux.org/wiki/PostgreSQL</a></li>
+      </ul>
+
+      <h3>12.2 Arquivos Importantes</h3>
+      <table>
+        <thead><tr><th>Arquivo</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td><code>/etc/gitea/app.ini</code></td><td>Configuração principal do Gitea</td></tr>
+          <tr><td><code>/etc/init.d/gitea</code></td><td>Script de serviço OpenRC</td></tr>
+          <tr><td><code>/var/lib/gitea/repositories/</code></td><td>Repositórios Git dos usuários</td></tr>
+          <tr><td><code>/var/lib/gitea/data/</code></td><td>Anexos, avatares, LFS</td></tr>
+          <tr><td><code>/var/lib/gitea/custom/</code></td><td>Customizações</td></tr>
+          <tr><td><code>/var/log/gitea/gitea.log</code></td><td>Log do Gitea</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============ 13. CHECKLIST ============ -->
+    <section id="sec13">
+      <h2>13. Checklist Final de Implantação</h2>
+
+      <ul class="checklist">
+        <li class="done">Script de instalação executado com sucesso</li>
+        <li class="done">PostgreSQL configurado e rodando</li>
+        <li class="done">Gitea rodando na porta 3000</li>
+        <li class="done">Serviço habilitado no boot</li>
+        <li class="done">Arquivo <code>app.ini</code> gerado com chaves seguras</li>
+        <li class="done">Usuário administrador criado</li>
+        <li class="done">Conta de serviço <code>svc_gitea_ldap</code> criada no AD</li>
+        <li class="done">Bind com conta de serviço validado</li>
+        <li class="done">Fonte LDAP configurada no Gitea</li>
+        <li class="done">Teste de login com usuário do AD bem-sucedido</li>
+        <li>Registro público desabilitado</li>
+        <li>Sincronização periódica habilitada</li>
+        <li>Mapeamento de grupos AD → Times do Gitea</li>
+        <li>(Opcional) Certificado LDAPS instalado no AD</li>
+        <li>(Opcional) Nginx configurado como proxy reverso</li>
+        <li>(Opcional) HTTPS habilitado</li>
+        <li>Backup automático configurado</li>
+      </ul>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p><strong>Documento elaborado por:</strong> Equipe de TI · <strong>Última atualização:</strong> Outubro/2026 · <strong>Versão:</strong> 2.0</p>
+  <p>Documentação de instalação e integração do Gitea com Active Directory no Alpine Linux 3.23.x</p>
+</footer>
+
+<button id="backToTop" title="Voltar ao topo">↑</button>
+
+<script>
+  // ---------- TEMA CLARO/ESCURO ----------
+  const themeToggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    html.setAttribute('data-theme', savedTheme);
+    updateThemeButton(savedTheme);
+  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    html.setAttribute('data-theme', 'dark');
+    updateThemeButton('dark');
+  }
+
+  themeToggle.addEventListener('click', () => {
+    const current = html.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    updateThemeButton(next);
+  });
+
+  function updateThemeButton(theme) {
+    themeToggle.textContent = theme === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
+  }
+
+  // ---------- OCULTAR/MOSTRAR MENU ----------
+  const btnHideSidebar = document.getElementById('btnHideSidebar');
+  const wrapper = document.getElementById('wrapper');
+  const sidebarState = localStorage.getItem('sidebarHidden');
+
+  if (sidebarState === 'true') {
+    wrapper.classList.add('sidebar-hidden');
+    btnHideSidebar.classList.add('collapsed');
+    btnHideSidebar.textContent = '▶';
+    btnHideSidebar.title = 'Mostrar menu';
+  }
+
+  btnHideSidebar.addEventListener('click', () => {
+    const isHidden = wrapper.classList.toggle('sidebar-hidden');
+    btnHideSidebar.classList.toggle('collapsed', isHidden);
+    btnHideSidebar.textContent = isHidden ? '▶' : '◀';
+    btnHideSidebar.title = isHidden ? 'Mostrar menu' : 'Ocultar menu';
+    localStorage.setItem('sidebarHidden', isHidden);
+  });
+
+  // ---------- COPIAR CÓDIGO ----------
+  document.querySelectorAll('pre').forEach(pre => {
+    if (pre.querySelector('.copy-btn')) return;
+
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = '📋 Copiar';
+    btn.addEventListener('click', async () => {
+      const code = pre.querySelector('code')?.innerText || pre.innerText;
+      try {
+        await navigator.clipboard.writeText(code);
+        btn.textContent = '✓ Copiado!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 Copiar';
+          btn.classList.remove('copied');
+        }, 2000);
+      } catch (err) {
+        btn.textContent = '❌ Falha';
+        setTimeout(() => { btn.textContent = '📋 Copiar'; }, 2000);
+      }
+    });
+    pre.appendChild(btn);
+  });
+
+  // ---------- BOTÃO VOLTAR AO TOPO ----------
+  const backToTop = document.getElementById('backToTop');
+  window.addEventListener('scroll', () => {
+    backToTop.classList.toggle('visible', window.scrollY > 400);
+  });
+
+  backToTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ---------- DESTACAR SEÇÃO ATIVA ----------
+  const sections = document.querySelectorAll('main section, h3[id^="sec8-"]');
+  const navLinks = document.querySelectorAll('.sidebar nav a');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.toggle('active',
+            link.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, {
+    rootMargin: '-100px 0px -70% 0px',
+    threshold: 0
+  });
+
+  sections.forEach(section => observer.observe(section));
+</script>
+
+</body>
+</html>
