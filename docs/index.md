@@ -1,4 +1,6 @@
-# Olá, seja muito bem-vindo(a) ao meu Portfólio! 🚀
+# Inicio 🚀
+
+# Olá, seja muito bem-vindo(a) ao meu Portfólio! 
 
 Prazer, sou **Wellington Alves**, estudante do curso Técnico de Redes de Computadores no **IFRN** (Instituto Federal do Rio Grande do Norte). 
 
