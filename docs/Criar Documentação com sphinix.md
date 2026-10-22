@@ -1,4 +1,6 @@
-# 📚 Guia Completo: Sphinx + UV + Markdown + GitHub
+# Documentação com Sphinx
+
+## 📚 Guia Completo: Sphinx + UV + Markdown + GitHub
 
 Este guia ensina todo o processo de instalação do **UV**, configuração do **Sphinx**, suporte a **Markdown** com **MyST Parser**, criação de documentação local e publicação em um repositório **GitHub**. As instruções foram revisadas com base na documentação oficial do [UV](https://docs.astral.sh/uv/), do [Sphinx](https://www.sphinx-doc.org/) e do [MyST Parser](https://myst-parser.readthedocs.io/).
 
