@@ -89,6 +89,6 @@ Minha trajetória profissional combina sólida vivência operacional em ambiente
 
 ## 📍 Contato & Redes Profissionais
 
-- **Localização:** Natal / RN - Brasil[cite: 3]
-- **LinkedIn:** [linkedin.com/in/wellington-alves-a9607b5b](https://www.linkedin.com/in/wellington-alves-a9607b5b)[cite: 3]
+
+- **LinkedIn:** [linkedin.com/in/wellington-alves-a9607b5b](https://www.linkedin.com/in/wellington-alves-a9607b5b)
 - **GitHub:** [github.com/wellington-cpu](https://github.com/wellington-cpu)
