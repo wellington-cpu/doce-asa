@@ -90,5 +90,5 @@ Minha trajetória profissional combina sólida vivência operacional em ambiente
 ## 📍 Contato & Redes Profissionais
 
 
-- **LinkedIn:** [linkedin.com/in/wellington-alves-a9607b5b](https://www.linkedin.com/in/wellington-alves-a9607b5b)
-- **GitHub:** [github.com/wellington-cpu](https://github.com/wellington-cpu)
+- **LinkedIn:** [Linkedin](https://www.linkedin.com/in/wellington-alves-a9607b5b)
+- **GitHub:** [Github](https://github.com/wellington-cpu)
