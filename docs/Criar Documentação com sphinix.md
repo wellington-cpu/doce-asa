@@ -1,12 +1,12 @@
 # Documentação com Sphinx
 
-## 📚 Guia Completo: Sphinx + UV + Markdown + GitHub
+## Guia: Sphinx, UV, Markdown e GitHub
 
-Este guia ensina todo o processo de instalação do **UV**, configuração do **Sphinx**, suporte a **Markdown** com **MyST Parser**, criação de documentação local e publicação em um repositório **GitHub**. As instruções foram revisadas com base na documentação oficial do [UV](https://docs.astral.sh/uv/), do [Sphinx](https://www.sphinx-doc.org/) e do [MyST Parser](https://myst-parser.readthedocs.io/).
+Neste guia, você vai ver como instalar o **UV**, configurar o **Sphinx**, usar arquivos **Markdown** com o **MyST Parser**, gerar a documentação localmente e publicá-la no **GitHub**. Para mais detalhes, consulte a documentação oficial do [UV](https://docs.astral.sh/uv/), do [Sphinx](https://www.sphinx-doc.org/) e do [MyST Parser](https://myst-parser.readthedocs.io/).
 
 ---
 
-## 📑 Sumário
+## Sumário
 
 1. [O que é UV?](#1-o-que-é-uv)
 2. [O que é Sphinx?](#2-o-que-é-sphinx)
@@ -31,7 +31,7 @@ Este guia ensina todo o processo de instalação do **UV**, configuração do **
 
 O **UV** é um gerenciador de projetos e pacotes Python desenvolvido pela [Astral](https://astral.sh/), capaz de criar ambientes virtuais, instalar dependências e executar aplicações Python de forma **rápida**. O projeto disponibiliza um instalador oficial para **Linux**, **macOS** e **Windows**.
 
-🔗 Documentação oficial: [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
+Documentação oficial do UV: [https://docs.astral.sh/uv/](https://docs.astral.sh/uv/)
 
 ---
 
@@ -39,7 +39,7 @@ O **UV** é um gerenciador de projetos e pacotes Python desenvolvido pela [Astra
 
 O **Sphinx** é um gerador de documentação amplamente utilizado em projetos Python e permite criar documentação em **HTML**, **PDF** e outros formatos a partir de arquivos **Markdown** ou **reStructuredText**.
 
-🔗 Documentação oficial: [https://www.sphinx-doc.org/](https://www.sphinx-doc.org/)
+Documentação oficial do Sphinx: [https://www.sphinx-doc.org/](https://www.sphinx-doc.org/)
 
 ---
 
@@ -47,7 +47,7 @@ O **Sphinx** é um gerador de documentação amplamente utilizado em projetos Py
 
 O **MyST Parser** adiciona suporte a **Markdown** dentro do Sphinx, permitindo criar documentações usando arquivos `.md` em vez de `.rst`. Para ativá-lo basta instalar o pacote e adicionar `"myst_parser"` às extensões do Sphinx.
 
-🔗 Documentação oficial: [https://myst-parser.readthedocs.io/](https://myst-parser.readthedocs.io/)
+Documentação oficial do MyST Parser: [https://myst-parser.readthedocs.io/](https://myst-parser.readthedocs.io/)
 
 ---
 
@@ -419,7 +419,7 @@ jobs:
           make html
 ```
 
-🔗 Documentação oficial: [GitHub Actions](https://docs.github.com/en/actions)
+Documentação oficial: [GitHub Actions](https://docs.github.com/en/actions)
 
 ---
 
@@ -447,7 +447,7 @@ E habilite o **GitHub Pages** nas configurações do repositório.
 
 > Uma alternativa comum é utilizar **GitHub Actions** para publicar automaticamente a documentação gerada.
 
-🔗 Documentação oficial: [GitHub Pages](https://docs.github.com/en/pages)
+Documentação oficial: [GitHub Pages](https://docs.github.com/en/pages)
 
 ---
 
@@ -516,27 +516,27 @@ git push -u origin main
 
 ## 16. Referências
 
-- 📘 **Documentação oficial do UV — Installation**: [https://docs.astral.sh/uv/getting-started/installation/](https://docs.astral.sh/uv/getting-started/installation/)
+- **Documentação oficial do UV — Installation**: [https://docs.astral.sh/uv/getting-started/installation/](https://docs.astral.sh/uv/getting-started/installation/)
   > O UV fornece instaladores oficiais para Linux, macOS e Windows, além dos comandos de atualização e verificação de instalação.
 
-- 📗 **Documentação oficial do Sphinx — sphinx-quickstart**: [https://www.sphinx-doc.org/en/master/usage/quickstart.html](https://www.sphinx-doc.org/en/master/usage/quickstart.html)
+- **Documentação oficial do Sphinx — sphinx-quickstart**: [https://www.sphinx-doc.org/en/master/usage/quickstart.html](https://www.sphinx-doc.org/en/master/usage/quickstart.html)
   > Explica a criação da estrutura inicial do projeto e os parâmetros suportados pelo assistente de configuração.
 
-- 📙 **Documentação oficial do MyST Parser — Get started with MyST in Sphinx**: [https://myst-parser.readthedocs.io/en/latest/syntax/optional.html](https://myst-parser.readthedocs.io/en/latest/syntax/optional.html)
+- **Documentação oficial do MyST Parser — Get started with MyST in Sphinx**: [https://myst-parser.readthedocs.io/en/latest/syntax/optional.html](https://myst-parser.readthedocs.io/en/latest/syntax/optional.html)
   > Mostra como instalar o MyST Parser e ativar `"myst_parser"` dentro do Sphinx.
 
-- 📕 **Guia Markdown do Sphinx — Markdown**: [https://www.sphinx-doc.org/en/master/usage/markdown.html](https://www.sphinx-doc.org/en/master/usage/markdown.html)
+- **Guia Markdown do Sphinx — Markdown**: [https://www.sphinx-doc.org/en/master/usage/markdown.html](https://www.sphinx-doc.org/en/master/usage/markdown.html)
   > Descreve a integração oficial entre Sphinx e Markdown por meio do MyST Parser.
 
-- 🐙 **Repositório oficial do UV — astral-sh/uv**: [https://github.com/astral-sh/uv](https://github.com/astral-sh/uv)
+- **Repositório oficial do UV — astral-sh/uv**: [https://github.com/astral-sh/uv](https://github.com/astral-sh/uv)
   > Contém a documentação de instalação e uso da ferramenta.
 
-- 🐙 **Repositório oficial do MyST Parser — executepy/myst-parser**: [https://github.com/executablebooks/MyST-Parser](https://github.com/executablebooks/MyST-Parser)
+- **Repositório oficial do MyST Parser — executablebooks/MyST-Parser**: [https://github.com/executablebooks/MyST-Parser](https://github.com/executablebooks/MyST-Parser)
   > Repositório com código-fonte, exemplos e issues do projeto.
 
-- 🐙 **Repositório oficial do Sphinx — sphinx-doc/sphinx**: [https://github.com/sphinx-doc/sphinx](https://github.com/sphinx-doc/sphinx)
+- **Repositório oficial do Sphinx — sphinx-doc/sphinx**: [https://github.com/sphinx-doc/sphinx](https://github.com/sphinx-doc/sphinx)
   > Repositório oficial do gerador de documentação.
 
 ---
 
-> ✅ **Documento revisado e formatado com base nas documentações oficiais do UV, Sphinx e MyST Parser.**
+> Este guia foi preparado com base nas documentações oficiais do UV, Sphinx e MyST Parser.
